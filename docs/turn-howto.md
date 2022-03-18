@@ -96,13 +96,13 @@ This will install and start a systemd service called `coturn`.
     ```
     # VoIP traffic is all UDP. There is no reason to let users connect to arbitrary TCP endpoints via the relay.
     no-tcp-relay
-
+    
     # don't let the relay ever try to connect to private IP address ranges within your network (if any)
     # given the turn server is likely behind your firewall, remember to include any privileged public IPs too.
     denied-peer-ip=10.0.0.0-10.255.255.255
     denied-peer-ip=192.168.0.0-192.168.255.255
     denied-peer-ip=172.16.0.0-172.31.255.255
-
+    
     # recommended additional local peers to block, to mitigate external access to internal services.
     # https://www.rtcsec.com/article/slack-webrtc-turn-compromise-and-bug-bounty/#how-to-fix-an-open-turn-relay-to-address-this-vulnerability
     no-multicast-peers
@@ -117,11 +117,11 @@ This will install and start a systemd service called `coturn`.
     denied-peer-ip=198.51.100.0-198.51.100.255
     denied-peer-ip=203.0.113.0-203.0.113.255
     denied-peer-ip=240.0.0.0-255.255.255.255
-
+    
     # special case the turn server itself so that client->TURN->TURN->client flows work
     # this should be one of the turn server's listening IPs
     allowed-peer-ip=10.0.0.1
-
+    
     # consider whether you want to limit the quota of relayed streams per user (or total) to avoid risk of DoS.
     user-quota=12 # 4 streams per video call, so 12 streams = 3 simultaneous relayed calls per user.
     total-quota=1200
@@ -134,10 +134,10 @@ This will install and start a systemd service called `coturn`.
     # TLS certificates, including intermediate certs.
     # For Let's Encrypt certificates, use `fullchain.pem` here.
     cert=/path/to/fullchain.pem
-
+    
     # TLS private key file
     pkey=/path/to/privkey.pem
-
+    
     # Ensure the configuration lines that disable TLS/DTLS are commented-out or removed
     #no-tls
     #no-dtls
@@ -246,8 +246,26 @@ After updating the homeserver configuration, you must restart synapse:
     ```sh
     systemctl restart matrix-synapse.service
     ```
-... and then reload any clients (or wait an hour for them to refresh their
-settings).
+    ... and then reload any clients (or wait an hour for them to refresh their
+    settings).
+
+## Setting up TURN Server from Open Relay Project
+
+[Open Relay Project](https://www.metered.ca/tools/openrelay/) is a completely free WebRTC TURN Server provided by [Metered Video](https://www.metered.ca/).
+
+Here is the working configuration that you can use:
+
+```
+turn_uris: [ "turn:staticauth.openrelay.metered.ca:80?transport=udp", "turn:staticauth.openrelay.metered.ca:80?transport=tcp" ]
+turn_shared_secret: "openrelayprojectsecret"
+turn_user_lifetime: 86400000
+turn_allow_guests: True
+```
+
+For the `turn_uris` you can use `staticauth.openrelay.metered.ca:80?transport=udp` `staticauth.openrelay.metered.ca:443?transport=tcp` and for shared secret you can use `openrelayprojectsecret`
+
+The Open Relay TURN Server runs on port 80 and 443 to bypass most firewalls.
+
 
 ## Troubleshooting
 
